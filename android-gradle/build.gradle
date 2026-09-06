@@ -1,0 +1,43 @@
+plugins {
+    id 'com.android.library' version '8.11.1'
+}
+
+android {
+    namespace 'org.libsdl.app'
+    compileSdk 37
+
+    defaultConfig {
+        minSdk 21
+        targetSdk 37
+
+        externalNativeBuild {
+            ndkBuild {
+                arguments "APP_PLATFORM=android-21"
+                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    externalNativeBuild {
+        ndkBuild {
+            path file('../Android.mk')
+        }
+    }
+
+    sourceSets {
+        main {
+            java.srcDirs = ['../android-project/app/src/main/java', '../jni_bindings/src/main/java']
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.annotation:annotation:1.9.1'
+}

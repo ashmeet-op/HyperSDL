@@ -5,6 +5,7 @@ import static android.content.Context.UI_MODE_SERVICE;
 import android.app.Activity;
 import android.app.UiModeManager;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -17,12 +18,12 @@ import android.os.ParcelFileDescriptor;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Surface;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ public class SDLActivity {
     protected static Activity mContext;
 
     private static SDLClipboard mClipboard;
+    private static boolean dynamicOrientationEnabled = false;
 
     public static void initialize() {
         mSurface = null;
@@ -124,11 +126,29 @@ public class SDLActivity {
     }
 
     public static void manualBackButton() {
-        // Unsupported
+        if (getContext() != null) {
+            getContext().onBackPressed();
+        }
+    }
+
+    public static void setDynamicOrientationEnabled(boolean enabled) {
+        dynamicOrientationEnabled = enabled;
     }
 
     public static void setOrientation(int w, int h, boolean resizable, String hint) {
-        // Unsupported
+        if (getContext() == null || !dynamicOrientationEnabled) {
+            return;
+        }
+
+        int orientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+        if (w > h) {
+            orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        } else if (h > w) {
+            orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        }
+
+        final int finalOrientation = orientation;
+        getContext().runOnUiThread(() -> getContext().setRequestedOrientation(finalOrientation));
     }
 
     public static boolean shouldMinimizeOnFocusLoss() {
@@ -140,12 +160,12 @@ public class SDLActivity {
     }
 
     public static boolean setRelativeMouseEnabled(boolean enabled) {
-        grabListener.onGrabState(enabled);
+        if (grabListener != null) grabListener.onGrabState(enabled);
         return true;
     }
 
     public static void initTouch() {
-        // TODO
+        Log.i("SDL", "initTouch called");
     }
 
     public static boolean clipboardHasText() {
@@ -174,18 +194,19 @@ public class SDLActivity {
 
     public static boolean setCustomCursor(int cursorID) {
         if(!customCursors.containsKey(cursorID)) return false;
-        cursorCallback.onCursorChange(customCursors.get(cursorID));
+        if (cursorCallback != null) cursorCallback.onCursorChange(customCursors.get(cursorID));
         return true;
     }
 
     public static boolean setSystemCursor(int cursorID) {
-        // TODO: implement system cursors (point,loading, etc) on Mojo side
-        cursorCallback.onCursorChange(null);
+        if (cursorCallback != null) cursorCallback.onCursorChange(null);
         return true;
     }
 
     public static void requestPermission(String permission, int requestCode) {
-        // TODO: maybe implement?
+        if (getContext() != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getContext().requestPermissions(new String[]{permission}, requestCode);
+        }
     }
 
     public static boolean openURL(String url)
@@ -199,24 +220,25 @@ public class SDLActivity {
                 | Intent.FLAG_ACTIVITY_NEW_DOCUMENT;
             i.addFlags(flags);
 
-            mContext.startActivity(i);
+            if (mContext != null) mContext.startActivity(i);
         } catch (Exception ex) {
             return false;
         }
         return true;
     }
 
-    static String getDeviceFormFactor()
-    {
-        // TODO: WearOS
+    static String getDeviceFormFactor() {
+        if (getContext() == null) return "phone";
+        Configuration config = getContext().getResources().getConfiguration();
+        if ((config.uiMode & Configuration.UI_MODE_TYPE_MASK) == Configuration.UI_MODE_TYPE_WATCH) {
+            return "wearable";
+        }
         if (isAndroidTV()) {
             return "tv";
         } else if (isVRHeadset()) {
             return "headset";
         } else if (isTablet()) {
             return "tablet";
-            //} else if (isAndroidAutomotive()) {
-            //    return "car";
         } else {
             return "phone";
         }
@@ -250,6 +272,7 @@ public class SDLActivity {
         return false;
     }
     public static boolean isAndroidTV() {
+        if (getContext() == null) return false;
         UiModeManager uiModeManager = (UiModeManager) getContext().getSystemService(UI_MODE_SERVICE);
         if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
             return true;
@@ -277,7 +300,6 @@ public class SDLActivity {
     }
 
     public static boolean isChromebook() {
-        // https://stackoverflow.com/questions/39784415/how-to-detect-programmatically-if-android-app-is-running-in-chrome-book-or-in
         if (getContext() != null) {
             if (getContext().getPackageManager().hasSystemFeature("org.chromium.arc")
                 || getContext().getPackageManager().hasSystemFeature("org.chromium.arc.device_management")) {
@@ -285,11 +307,10 @@ public class SDLActivity {
             }
         }
 
-        // Running on AVD emulator
         return (Build.MODEL != null && Build.MODEL.startsWith("sdk_gpc_"));
     }
     public static boolean isDeXMode() {
-        if (Build.VERSION.SDK_INT < 24 /* Android 7.0 (N) */) {
+        if (getContext() == null || Build.VERSION.SDK_INT < 24) {
             return false;
         }
         try {
@@ -316,21 +337,21 @@ public class SDLActivity {
         return Math.sqrt((dWidthInches * dWidthInches) + (dHeightInches * dHeightInches));
     }
 
-    /**
-     * This method is called by SDL using JNI.
-     */
     public static boolean isTablet() {
-        // If our diagonal size is seven inches or greater, we consider ourselves a tablet.
         return (getDiagonal() >= 7.0);
     }
+
     public static boolean sendMessage(int what, int arg) {
         return false;
     }
+
     public static void minimizeWindow() {
-        Intent startMain = new Intent(Intent.ACTION_MAIN);
-        startMain.addCategory(Intent.CATEGORY_HOME);
-        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        mContext.startActivity(startMain);
+        if (mContext != null) {
+            Intent startMain = new Intent(Intent.ACTION_MAIN);
+            startMain.addCategory(Intent.CATEGORY_HOME);
+            startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mContext.startActivity(startMain);
+        }
     }
 
     public static boolean setActivityTitle(String title) {
@@ -338,45 +359,53 @@ public class SDLActivity {
     }
 
     public static void setWindowStyle(boolean fullscreen) {
+        if (getContext() != null) {
+            getContext().runOnUiThread(() -> {
+                if (fullscreen) {
+                    getContext().getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                } else {
+                    getContext().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                }
+            });
+        }
     }
 
     public static boolean showTextInput(int input_type, int x, int y, int w, int h) {
+        try {
+            Activity context = getContext();
+            if (context == null) return false;
+            Class<?> gameActivityClass = Class.forName("net.kdt.pojavlaunch.game.GameActivity");
+            Method switchKeyboardStateMethod = gameActivityClass.getMethod("switchKeyboardState", boolean.class);
+            context.runOnUiThread(() -> {
+                try {
+                    switchKeyboardStateMethod.invoke(null, true);
+                } catch (Exception e) {
+                    Log.e("SDL", "Failed to invoke switchKeyboardState", e);
+                }
+            });
+            return true;
+        } catch (Exception e) {
+            Log.e("SDL", "GameActivity not found or method missing", e);
+        }
         return false;
     }
 
     public static boolean showToast(String message, int duration, int gravity, int xOffset, int yOffset)
     {
+        if (mContext == null) return false;
         try
         {
-            class OneShotTask implements Runnable {
-                private final String mMessage;
-                private final int mDuration;
-                private final int mGravity;
-                private final int mXOffset;
-                private final int mYOffset;
-
-                OneShotTask(String message, int duration, int gravity, int xOffset, int yOffset) {
-                    mMessage  = message;
-                    mDuration = duration;
-                    mGravity  = gravity;
-                    mXOffset  = xOffset;
-                    mYOffset  = yOffset;
-                }
-
-                public void run() {
-                    try
-                    {
-                        Toast toast = Toast.makeText(mContext, mMessage, mDuration);
-                        if (mGravity >= 0) {
-                            toast.setGravity(mGravity, mXOffset, mYOffset);
-                        }
-                        toast.show();
-                    } catch(Exception ex) {
-                        Log.e("SDL", "Failed to spawn toast: " + ex.getMessage());
+            mContext.runOnUiThread(() -> {
+                try {
+                    Toast toast = Toast.makeText(mContext, message, duration);
+                    if (gravity >= 0) {
+                        toast.setGravity(gravity, xOffset, yOffset);
                     }
+                    toast.show();
+                } catch(Exception ex) {
+                    Log.e("SDL", "Failed to spawn toast: " + ex.getMessage());
                 }
-            }
-            mContext.runOnUiThread(new OneShotTask(message, duration, gravity, xOffset, yOffset));
+            });
         } catch(Exception ex) {
             return false;
         }
@@ -384,6 +413,7 @@ public class SDLActivity {
     }
 
     public static int openFileDescriptor(String uri, String mode) {
+        if (mContext == null) return -1;
         try(ParcelFileDescriptor fileDescriptor = mContext.getContentResolver().openFileDescriptor(Uri.parse(uri), mode);) {
             if(fileDescriptor == null) return -1;
             return fileDescriptor.detachFd();
@@ -394,13 +424,12 @@ public class SDLActivity {
     }
 
     public static boolean showFileDialog(String[] filters, boolean allowMultiple, int type, String initialPath, int requestCode) {
-        // Unsupported
         return false;
     }
 
     public static String getPreferredLocales() {
         StringBuilder result = new StringBuilder();
-        if (Build.VERSION.SDK_INT >= 24 /* Android 7 (N) */) {
+        if (Build.VERSION.SDK_INT >= 24) {
             LocaleList locales = LocaleList.getAdjustedDefault();
             for (int i = 0; i < locales.size(); i++) {
                 if (i != 0) result.append(",");
@@ -411,23 +440,11 @@ public class SDLActivity {
     }
 
     public static String formatLocale(Locale locale) {
-        String result = "";
-        String lang = "";
-        if (locale.getLanguage().equals("in")) {
-            // Indonesian is "id" according to ISO 639.2, but on Android is "in" because of Java backwards compatibility
-            lang = "id";
-        } else if (locale.getLanguage().isEmpty()) {
-            // Make sure language is never empty
-            lang = "und";
-        } else {
-            lang = locale.getLanguage();
-        }
+        String lang = locale.getLanguage();
+        if (lang.equals("in")) lang = "id";
+        else if (lang.isEmpty()) lang = "und";
 
-        if (locale.getCountry() == "") {
-            result = lang;
-        } else {
-            result = lang + "_" + locale.getCountry();
-        }
-        return result;
+        String country = locale.getCountry();
+        return country.isEmpty() ? lang : lang + "_" + country;
     }
 }

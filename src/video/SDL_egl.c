@@ -29,6 +29,7 @@
 #include <android/native_window.h>
 #include <dlfcn.h>
 #include <mojoexec.h>
+
 #include "../video/android/SDL_androidvideo.h"
 #endif
 #ifdef SDL_VIDEO_DRIVER_RPI

@@ -10,7 +10,9 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := SDL3
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/include/build_config $(LOCAL_PATH)/src
+LOCAL_SHORT_COMMANDS := true
+
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/include/build_config $(LOCAL_PATH)/src $(LOCAL_PATH)/../mojoexec/include $(LOCAL_PATH)/../mojoexec
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
 
@@ -89,6 +91,18 @@ LOCAL_SRC_FILES := \
 	$(wildcard $(LOCAL_PATH)/src/video/arm/*.c) \
 	$(wildcard $(LOCAL_PATH)/src/video/yuv2rgb/*.c))
 
+LOCAL_SRC_FILES += \
+	../mojoexec/mojoexec.c \
+	../mojoexec/vulkan_loader.c \
+	../mojoexec/driver_helper/nsbypass.c \
+	../mojoexec/driver_helper/fake_dlfcn.c \
+	../mojoexec/driver_helper/func_locator.c
+
+ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
+LOCAL_SRC_FILES += ../mojoexec/driver_helper/arm64_func_locator.c
+LOCAL_CFLAGS += -DUSE_ARM64_LOCATOR -DENABLE_TURNIP_LOADER
+endif
+
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES
 LOCAL_CFLAGS += \
 	-Wall -Wextra \
@@ -132,6 +146,8 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/src
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
 
 LOCAL_MODULE := SDL3_test
+
+LOCAL_SHORT_COMMANDS := true
 
 LOCAL_MODULE_FILENAME := libSDL3_test
 

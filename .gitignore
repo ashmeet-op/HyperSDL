@@ -171,3 +171,13 @@ test/torturethread
 docs/output
 SDL.tag
 doxygen_warn.txt
+
+# Android Studio / Gradle
+build/
+.gradle/
+.cxx/
+local.properties
+*.iml
+.idea/
+.externalNativeBuild/
+captures/
