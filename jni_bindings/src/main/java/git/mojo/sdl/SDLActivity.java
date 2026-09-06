@@ -142,9 +142,9 @@ public class SDLActivity {
 
         int orientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
         if (w > h) {
-            orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+            orientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
         } else if (h > w) {
-            orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+            orientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
         }
 
         final int finalOrientation = orientation;
