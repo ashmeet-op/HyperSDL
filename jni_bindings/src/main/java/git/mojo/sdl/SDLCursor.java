@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 public class SDLCursor {
     public interface CursorChangeCallback {
         void onCursorChange(SDLCursor cursor);
+        void onSystemCursorChange(int systemCursorID);
     }
     private final int width;
     private final int height;

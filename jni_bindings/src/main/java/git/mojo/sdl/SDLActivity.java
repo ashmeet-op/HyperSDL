@@ -199,7 +199,7 @@ public class SDLActivity {
     }
 
     public static boolean setSystemCursor(int cursorID) {
-        if (cursorCallback != null) cursorCallback.onCursorChange(null);
+        if (cursorCallback != null) cursorCallback.onSystemCursorChange(cursorID);
         return true;
     }
 
