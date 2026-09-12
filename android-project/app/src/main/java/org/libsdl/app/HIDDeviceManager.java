@@ -50,9 +50,9 @@ public class HIDDeviceManager {
         }
     }
 
-    private Context mContext;
-    private HashMap<Integer, HIDDevice> mDevicesById = new HashMap<Integer, HIDDevice>();
-    private HashMap<BluetoothDevice, HIDDeviceBLESteamController> mBluetoothDevices = new HashMap<BluetoothDevice, HIDDeviceBLESteamController>();
+    private final Context mContext;
+    private final HashMap<Integer, HIDDevice> mDevicesById = new HashMap<Integer, HIDDevice>();
+    private final HashMap<BluetoothDevice, HIDDeviceBLESteamController> mBluetoothDevices = new HashMap<BluetoothDevice, HIDDeviceBLESteamController>();
     private int mNextDeviceId = 0;
     private SharedPreferences mSharedPreferences = null;
     private boolean mIsChromebook = false;
@@ -220,10 +220,7 @@ public class HIDDeviceManager {
         if (usbInterface.getInterfaceClass() == UsbConstants.USB_CLASS_HID) {
             return true;
         }
-        if (isXbox360Controller(usbDevice, usbInterface) || isXboxOneController(usbDevice, usbInterface)) {
-            return true;
-        }
-        return false;
+        return isXbox360Controller(usbDevice, usbInterface) || isXboxOneController(usbDevice, usbInterface);
     }
 
     private boolean isXbox360Controller(UsbDevice usbDevice, UsbInterface usbInterface) {

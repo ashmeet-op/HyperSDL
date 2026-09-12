@@ -30,7 +30,7 @@ import java.util.Map;
 public class SDLActivity {
 
     private static GrabListener grabListener;
-    private static Map<Integer, SDLCursor> customCursors = new HashMap<>();
+    private static final Map<Integer, SDLCursor> customCursors = new HashMap<>();
     private static SDLCursor.CursorChangeCallback cursorCallback;
     private static int lastCursorId = 0;
     private static Runnable initCallback;
@@ -267,7 +267,7 @@ public class SDLActivity {
             /* environment variables set! */
             return true;
         } catch (Exception e) {
-            Log.v("SDL", "Manifest env exception " + e.toString());
+            Log.v("SDL", "Manifest env exception " + e);
         }
         return false;
     }
@@ -280,23 +280,17 @@ public class SDLActivity {
         if (Build.MANUFACTURER.equals("MINIX") && Build.MODEL.equals("NEO-U1")) {
             return true;
         }
-        if (Build.MANUFACTURER.equals("Amlogic") &&
+        return Build.MANUFACTURER.equals("Amlogic") &&
             (Build.MODEL.startsWith("TV") ||
                 Build.MODEL.equals("X96-W") ||
-                Build.MODEL.equals("A95X-R1"))) {
-            return true;
-        }
-        return false;
+                Build.MODEL.equals("A95X-R1"));
     }
 
     public static boolean isVRHeadset() {
         if (Build.MANUFACTURER.equals("Oculus") && Build.MODEL.startsWith("Quest")) {
             return true;
         }
-        if (Build.MANUFACTURER.equals("Pico")) {
-            return true;
-        }
-        return false;
+        return Build.MANUFACTURER.equals("Pico");
     }
 
     public static boolean isChromebook() {
@@ -414,7 +408,7 @@ public class SDLActivity {
 
     public static int openFileDescriptor(String uri, String mode) {
         if (mContext == null) return -1;
-        try(ParcelFileDescriptor fileDescriptor = mContext.getContentResolver().openFileDescriptor(Uri.parse(uri), mode);) {
+        try(ParcelFileDescriptor fileDescriptor = mContext.getContentResolver().openFileDescriptor(Uri.parse(uri), mode)) {
             if(fileDescriptor == null) return -1;
             return fileDescriptor.detachFd();
         } catch (IOException e) {

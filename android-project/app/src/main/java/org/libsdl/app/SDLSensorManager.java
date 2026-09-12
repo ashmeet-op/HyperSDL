@@ -12,7 +12,7 @@ import android.util.Log;
 
 class SDLSensorManager
 {
-    static private SDLSensorManager mManager = new SDLSensorManager();
+    static private final SDLSensorManager mManager = new SDLSensorManager();
 
     static final int RETRY_COUNT = 3;
 

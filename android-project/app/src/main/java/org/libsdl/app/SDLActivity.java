@@ -402,7 +402,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         try {
             Thread.currentThread().setName("SDLActivity");
         } catch (Exception e) {
-            Log.v(TAG, "modify thread properties failed " + e.toString());
+            Log.v(TAG, "modify thread properties failed " + e);
         }
 
         // Load shared libraries
@@ -421,9 +421,9 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         }
 
         if (!mBrokenLibraries) {
-            String expected_version = String.valueOf(SDL_MAJOR_VERSION) + "." +
-                                      String.valueOf(SDL_MINOR_VERSION) + "." +
-                                      String.valueOf(SDL_MICRO_VERSION);
+            String expected_version = SDL_MAJOR_VERSION + "." +
+                SDL_MINOR_VERSION + "." +
+                SDL_MICRO_VERSION;
             String version = nativeGetVersion();
             if (!version.equals(expected_version)) {
                 mBrokenLibraries = true;
@@ -1372,23 +1372,17 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         if (Build.MANUFACTURER.equals("MINIX") && Build.MODEL.equals("NEO-U1")) {
             return true;
         }
-        if (Build.MANUFACTURER.equals("Amlogic") &&
+        return Build.MANUFACTURER.equals("Amlogic") &&
             (Build.MODEL.startsWith("TV") ||
-             Build.MODEL.equals("X96-W") ||
-             Build.MODEL.equals("A95X-R1"))) {
-            return true;
-        }
-        return false;
+                Build.MODEL.equals("X96-W") ||
+                Build.MODEL.equals("A95X-R1"));
     }
 
     public static boolean isVRHeadset() {
         if (Build.MANUFACTURER.equals("Oculus") && Build.MODEL.startsWith("Quest")) {
             return true;
         }
-        if (Build.MANUFACTURER.equals("Pico")) {
-            return true;
-        }
-        return false;
+        return Build.MANUFACTURER.equals("Pico");
     }
 
     /**
@@ -1493,7 +1487,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             /* environment variables set! */
             return true;
         } catch (Exception e) {
-           Log.v(TAG, "exception " + e.toString());
+           Log.v(TAG, "exception " + e);
         }
         return false;
     }
@@ -1971,7 +1965,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             } catch (Exception e) {
             }
         }
-        return;
     }
 
     /**
@@ -2395,7 +2388,7 @@ class SDLMain implements Runnable {
         try {
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_DISPLAY);
         } catch (Exception e) {
-            Log.v("SDL", "modify thread properties failed " + e.toString());
+            Log.v("SDL", "modify thread properties failed " + e);
         }
 
         SDLActivity.nativeInitMainThread();

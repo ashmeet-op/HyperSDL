@@ -2,7 +2,7 @@ plugins {
      id 'com.android.application'
 }
 
-def buildWithCMake = project.hasProperty('BUILD_WITH_CMAKE');
+def buildWithCMake = project.hasProperty('BUILD_WITH_CMAKE')
 
 android {
     namespace = "org.libsdl.app"

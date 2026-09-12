@@ -221,10 +221,7 @@ class HIDDeviceUSB implements HIDDevice {
             return false;
         }
         if (!mClaimed) {
-            if (feature) {
-                return false;
-            }
-            return true;
+            return !feature;
         }
 
         if (report_number == 0x0) {

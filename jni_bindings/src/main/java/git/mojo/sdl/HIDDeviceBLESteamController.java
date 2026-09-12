@@ -30,8 +30,8 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
 
     private static final String TAG = "hidapi";
     private HIDDeviceManager mManager;
-    private BluetoothDevice mDevice;
-    private int mDeviceId;
+    private final BluetoothDevice mDevice;
+    private final int mDeviceId;
     private BluetoothGatt mGatt;
     private boolean mIsRegistered = false;
     private boolean mIsConnected = false;
@@ -40,9 +40,9 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
     private boolean mHasEnabledNotifications = false;
     private boolean mHasSeenInputUpdate = false;
     private boolean mFrozen = false;
-    private LinkedList<GattOperation> mOperations;
+    private final LinkedList<GattOperation> mOperations;
     GattOperation mCurrentOperation = null;
-    private Handler mHandler;
+    private final Handler mHandler;
     private int mProductId = -1;
     private int mReportId = 0;
     private UUID mInputCharacteristic;
@@ -64,7 +64,7 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
     static final UUID reportCharacteristic = UUID.fromString("100F6C34-1735-4313-B402-38567131E5F3");
     static private final byte[] enterValveMode = new byte[] { (byte)0xC0, (byte)0x87, 0x03, 0x08, 0x07, 0x00 };
 
-    private HashMap<Integer, BluetoothGattCharacteristic> mOutputReportChars = new HashMap<Integer, BluetoothGattCharacteristic>();
+    private final HashMap<Integer, BluetoothGattCharacteristic> mOutputReportChars = new HashMap<Integer, BluetoothGattCharacteristic>();
 
     static class GattOperation {
         private enum Operation {
@@ -386,7 +386,7 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
                                 }
                             }
                             catch (NumberFormatException nfe) {
-                                Log.w(TAG, "Could not parse report characteristic " + chr.getUuid().toString() + ": " + nfe.toString());
+                                Log.w(TAG, "Could not parse report characteristic " + chr.getUuid().toString() + ": " + nfe);
                             }
                         }
                     }
