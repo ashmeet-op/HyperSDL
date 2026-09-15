@@ -4,7 +4,11 @@ plugins {
 
 android {
     namespace 'org.libsdl.app'
-    compileSdk 37
+    compileSdk {
+        version = release(37) {
+            it.minorApiLevel = 1
+        }
+    }
 
     defaultConfig {
         minSdk 21
