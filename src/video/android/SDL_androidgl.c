@@ -81,15 +81,15 @@ bool Android_GLES_SwapWindow(SDL_VideoDevice *_this, SDL_Window *window)
     _this->egl_data->eglWaitGL();*/
 
     // EGLSurface might have changed at this point, so it needs rebinding
-    if(window->internal->surface_changed){
+    if(window && window->internal && window->internal->surface_changed){
         SDL_GLContext ctx = SDL_GL_GetCurrentContext();
         SDL_EGL_MakeCurrent(_this, window->internal->egl_surface, (EGLContext) ctx);
         window->internal->surface_changed = false;
     }
 
-    result = SDL_EGL_SwapBuffers(_this, window->internal->egl_surface);
-
     Android_UnlockActivityMutex();
+
+    result = SDL_EGL_SwapBuffers(_this, (window && window->internal) ? window->internal->egl_surface : EGL_NO_SURFACE);
 
     return result;
 }
