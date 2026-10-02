@@ -94,6 +94,7 @@ LOCAL_SRC_FILES := \
 LOCAL_SRC_FILES += \
 	../mojoexec/mojoexec.c \
 	../mojoexec/vulkan_loader.c \
+	../mojoexec/affinity.c \
 	../mojoexec/driver_helper/nsbypass.c \
 	../mojoexec/driver_helper/fake_dlfcn.c \
 	../mojoexec/driver_helper/func_locator.c
