@@ -202,8 +202,9 @@ public class SDLActivity {
     }
 
     public static boolean setSystemCursor(int cursorID) {
-        // TODO: implement system cursors (point,loading, etc) on Mojo side
-        cursorCallback.onCursorChange(null);
+        if (cursorCallback != null) {
+            cursorCallback.onSystemCursorChange(cursorID);
+        }
         return true;
     }
 
