@@ -1525,8 +1525,11 @@ void SDL_PumpEventMaintenance(void)
 // Run the system dependent event loops
 static void SDL_PumpEventsInternal(bool push_sentinel)
 {
-    // This should only be called on the main thread, check in debug builds
-    SDL_assert(SDL_IsMainThread());
+    // HACK: route PumpEvents to main thread if not running there
+    if(!SDL_IsMainThread()) {
+        SDL_RunOnMainThread((SDL_MainThreadCallback) SDL_PumpEventsInternal, (void*)push_sentinel, true);
+        return;
+    }
 
     // Free any temporary memory from old events
     SDL_FreeTemporaryMemory();
@@ -1568,6 +1571,7 @@ static void SDL_PumpEventsInternal(bool push_sentinel)
         SDL_PushEvent(&sentinel);
     }
 }
+
 
 void SDL_PumpEvents(void)
 {
@@ -1755,6 +1759,10 @@ bool SDL_WaitEventTimeoutNS(SDL_Event *event, Sint64 timeoutNS)
         }
     } else {
         // Has existing events
+        if (!event) {
+            // The application expects callbacks to run even if events are pending
+            SDL_RunMainThreadCallbacks();
+        }
         return true;
     }
     // We should have completely handled timeoutNS == 0 above
@@ -1848,6 +1856,7 @@ bool SDL_PushEvent(SDL_Event *event)
 
 void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
 {
+    /*
     SDL_EventEntry *event, *next;
     SDL_LockMutex(SDL_event_lock);
     {
@@ -1869,6 +1878,8 @@ void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
         }
     }
     SDL_UnlockMutex(SDL_event_lock);
+     */
+    // TODO: HACK: Ignore event filters till Controlify upstream resolves issues when using shared with the game SDL
 }
 
 bool SDL_GetEventFilter(SDL_EventFilter *filter, void **userdata)

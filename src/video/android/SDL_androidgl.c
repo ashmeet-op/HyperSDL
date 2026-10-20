@@ -38,13 +38,7 @@
 
 bool Android_GLES_MakeCurrent(SDL_VideoDevice *_this, SDL_Window *window, SDL_GLContext context)
 {
-    // In some *rare* cases the given window might be offscreen one. In such cases we'll swap the window
-    // so we don't render onto pbuffer
-    // This is currently happens with Minecraft 26.3
-    if(Android_Window != window) {
-        Android_MakeWindowCurrent(_this, window);
-    }
-    if (window && context) {
+    if (context && window) {
         return SDL_EGL_MakeCurrent(_this, window->internal->egl_surface, context);
     } else {
         return SDL_EGL_MakeCurrent(_this, NULL, NULL);
@@ -68,10 +62,6 @@ SDL_GLContext Android_GLES_CreateContext(SDL_VideoDevice *_this, SDL_Window *win
 
 bool Android_GLES_SwapWindow(SDL_VideoDevice *_this, SDL_Window *window)
 {
-    bool result;
-
-    Android_LockActivityMutex();
-
     /* The following two calls existed in the original Java code
      * If you happen to have a device that's affected by their removal,
      * please report to our bug tracker. -- Gabriel
@@ -81,17 +71,16 @@ bool Android_GLES_SwapWindow(SDL_VideoDevice *_this, SDL_Window *window)
     _this->egl_data->eglWaitGL();*/
 
     // EGLSurface might have changed at this point, so it needs rebinding
-    if(window && window->internal && window->internal->surface_changed){
-        SDL_GLContext ctx = SDL_GL_GetCurrentContext();
-        SDL_EGL_MakeCurrent(_this, window->internal->egl_surface, (EGLContext) ctx);
-        window->internal->surface_changed = false;
+    SDL_AtomicInt *surf_state = &window->internal->surface_changed;
+    if(SDL_GetAtomicInt(surf_state)){
+        Android_LockActivityMutex();
+        // Method below will recreate needed surface automatically
+        Android_ManageSurface(_this, window);
+        SDL_SetAtomicInt(surf_state, false);
+        Android_UnlockActivityMutex();
     }
 
-    Android_UnlockActivityMutex();
-
-    result = SDL_EGL_SwapBuffers(_this, (window && window->internal) ? window->internal->egl_surface : EGL_NO_SURFACE);
-
-    return result;
+    return SDL_EGL_SwapBuffers(_this, window->internal->egl_surface);
 }
 
 bool Android_GLES_LoadLibrary(SDL_VideoDevice *_this, const char *path)

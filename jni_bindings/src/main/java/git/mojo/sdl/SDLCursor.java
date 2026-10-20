@@ -7,6 +7,9 @@ public class SDLCursor {
         void onCursorChange(SDLCursor cursor);
         void onSystemCursorChange(int systemCursorID);
     }
+    public interface CursorWarpCallback {
+        void onCursorWarp(double x, double y);
+    }
     private final int width;
     private final int height;
     private final int xhot;
